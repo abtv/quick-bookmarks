@@ -90,30 +90,14 @@ function selectBookmark(bookmarkElement) {
 
 function filterBookmarks(searchTerm) {
   const bookmarkItems = document.querySelectorAll('.bookmark-item');
-  const bookmarkFolders = document.querySelectorAll('.bookmark-folder');
   
-  // Reset visibility of all folders
-  bookmarkFolders.forEach(folder => {
-    folder.classList.add('hidden');
-  });
-
   // Filter bookmarks
-  let hasVisibleBookmarks = false;
   bookmarkItems.forEach(item => {
     const title = item.querySelector('.bookmark-title').textContent.toLowerCase();
     const url = item.dataset.url ? item.dataset.url.toLowerCase() : '';
     
     if (searchTerm === '' || title.includes(searchTerm) || url.includes(searchTerm)) {
       item.classList.remove('hidden');
-      // Show parent folders of matching bookmarks
-      let parent = item.parentElement;
-      while (parent) {
-        if (parent.classList.contains('bookmark-folder')) {
-          parent.classList.remove('hidden');
-        }
-        parent = parent.parentElement;
-      }
-      hasVisibleBookmarks = true;
     } else {
       item.classList.add('hidden');
     }
@@ -122,35 +106,11 @@ function filterBookmarks(searchTerm) {
 
 function displayBookmarkNode(node, container) {
   if (node.children) {
-    // This is a folder
-    const folderElement = document.createElement('div');
-    folderElement.className = 'bookmark-folder';
-    
-    const folderHeader = document.createElement('div');
-    folderHeader.className = 'folder-header';
-    
-    const folderIcon = document.createElement('span');
-    folderIcon.className = 'folder-icon';
-    folderIcon.textContent = '📁';
-    
-    const folderTitle = document.createElement('h2');
-    folderTitle.textContent = node.title || 'Unnamed Folder';
-    
-    folderHeader.appendChild(folderIcon);
-    folderHeader.appendChild(folderTitle);
-    
-    const bookmarkList = document.createElement('div');
-    bookmarkList.className = 'bookmark-list';
-    
-    // Process children
+    // If it's a folder, just process its children
     node.children.forEach(child => {
-      displayBookmarkNode(child, bookmarkList);
+      displayBookmarkNode(child, container);
     });
-    
-    folderElement.appendChild(folderHeader);
-    folderElement.appendChild(bookmarkList);
-    container.appendChild(folderElement);
-  } else {
+  } else if (node.url) {
     // This is a bookmark
     const bookmarkElement = document.createElement('div');
     bookmarkElement.className = 'bookmark-item';
@@ -163,8 +123,11 @@ function displayBookmarkNode(node, container) {
 
     const favicon = document.createElement('img');
     favicon.className = 'bookmark-favicon';
-    favicon.src = `chrome://favicon/size/16@2x/${node.url}`;
+    favicon.src = `chrome://favicon/size/16/${node.url}`;
     favicon.alt = '';
+    favicon.onerror = () => {
+      favicon.src = 'chrome://favicon/size/16';
+    };
 
     const title = document.createElement('div');
     title.className = 'bookmark-title';
