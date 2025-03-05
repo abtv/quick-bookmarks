@@ -7,9 +7,10 @@
     "bookmarks",
     "tabs"
   ],
-  "action": {
-    "default_popup": "popup.html"
-  },
+  "action": {},
   "icons": {
+  },
+  "background": {
+    "service_worker": "background.js"
   }
 } 

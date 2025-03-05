@@ -1,19 +1,33 @@
 body {
-  width: 400px;
   margin: 0;
   padding: 16px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .container {
+  width: 400px;
   max-height: 600px;
   overflow-y: auto;
+}
+
+.container.fullscreen {
+  width: 100%;
+  max-width: 1200px;
+  max-height: none;
+  margin: 0 auto;
+  padding: 24px;
+  box-sizing: border-box;
 }
 
 h1 {
   font-size: 20px;
   margin: 0 0 16px 0;
   color: #1a73e8;
+}
+
+.fullscreen h1 {
+  font-size: 24px;
+  margin: 0 0 24px 0;
 }
 
 h2 {
@@ -36,12 +50,23 @@ h2 {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.fullscreen .bookmark-folder {
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
 .bookmark-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-top: 8px;
   padding-left: 24px;
+}
+
+.fullscreen .bookmark-list {
+  gap: 12px;
+  margin-top: 12px;
+  padding-left: 32px;
 }
 
 .bookmark-item {
@@ -55,6 +80,10 @@ h2 {
   transition: background 0.2s;
 }
 
+.fullscreen .bookmark-item {
+  padding: 12px;
+}
+
 .bookmark-item:hover {
   background: #e8f0fe;
 }
@@ -63,6 +92,11 @@ h2 {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
+}
+
+.fullscreen .bookmark-favicon {
+  width: 20px;
+  height: 20px;
 }
 
 .bookmark-title {
@@ -74,6 +108,10 @@ h2 {
   color: #202124;
 }
 
+.fullscreen .bookmark-title {
+  font-size: 16px;
+}
+
 .folder-header {
   display: flex;
   align-items: center;
@@ -82,4 +120,8 @@ h2 {
 
 .folder-icon {
   font-size: 16px;
+}
+
+.fullscreen .folder-icon {
+  font-size: 20px;
 } 
