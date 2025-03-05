@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Bookmark Folder Viewer",
+  "version": "1.0",
+  "description": "View all bookmarks from your bookmark folders in a list format",
+  "permissions": [
+    "bookmarks",
+    "tabs"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+  }
+} 
