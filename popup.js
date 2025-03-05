@@ -16,27 +16,77 @@ document.addEventListener('DOMContentLoaded', async () => {
     searchInput.addEventListener('input', (e) => {
       const searchTerm = e.target.value.toLowerCase();
       filterBookmarks(searchTerm);
+      // Select first visible item after filtering
+      selectFirstVisibleBookmark();
     });
 
-    // Handle Enter key
+    // Handle keyboard navigation
     searchInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const firstVisibleBookmark = document.querySelector('.bookmark-item:not(.hidden)');
-        if (firstVisibleBookmark) {
-          const url = firstVisibleBookmark.dataset.url;
-          chrome.tabs.create({ url });
-        }
+      const visibleBookmarks = Array.from(document.querySelectorAll('.bookmark-item:not(.hidden)'));
+      if (visibleBookmarks.length === 0) return;
+
+      const currentSelected = document.querySelector('.bookmark-item.selected');
+      const currentIndex = currentSelected ? visibleBookmarks.indexOf(currentSelected) : -1;
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          if (currentIndex < visibleBookmarks.length - 1) {
+            selectBookmark(visibleBookmarks[currentIndex + 1]);
+          }
+          break;
+
+        case 'ArrowUp':
+          e.preventDefault();
+          if (currentIndex > 0) {
+            selectBookmark(visibleBookmarks[currentIndex - 1]);
+          }
+          break;
+
+        case 'Enter':
+          e.preventDefault();
+          const selectedBookmark = document.querySelector('.bookmark-item.selected');
+          if (selectedBookmark) {
+            const url = selectedBookmark.dataset.url;
+            // Replace current tab with the selected bookmark
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+              chrome.tabs.update(tabs[0].id, { url });
+            });
+          }
+          break;
       }
     });
 
-    // Focus search input
+    // Focus search input and select first bookmark
     searchInput.focus();
+    selectFirstVisibleBookmark();
 
     loadingElement.style.display = 'none';
   } catch (error) {
     loadingElement.textContent = 'Error loading bookmarks: ' + error.message;
   }
 });
+
+function selectFirstVisibleBookmark() {
+  const firstVisible = document.querySelector('.bookmark-item:not(.hidden)');
+  if (firstVisible) {
+    selectBookmark(firstVisible);
+  }
+}
+
+function selectBookmark(bookmarkElement) {
+  // Remove selection from previously selected bookmark
+  const previouslySelected = document.querySelector('.bookmark-item.selected');
+  if (previouslySelected) {
+    previouslySelected.classList.remove('selected');
+  }
+  
+  // Add selection to new bookmark
+  bookmarkElement.classList.add('selected');
+  
+  // Ensure the selected item is visible in the viewport
+  bookmarkElement.scrollIntoView({ block: 'nearest' });
+}
 
 function filterBookmarks(searchTerm) {
   const bookmarkItems = document.querySelectorAll('.bookmark-item');
@@ -106,7 +156,9 @@ function displayBookmarkNode(node, container) {
     bookmarkElement.className = 'bookmark-item';
     bookmarkElement.dataset.url = node.url; // Store URL for search
     bookmarkElement.addEventListener('click', () => {
-      chrome.tabs.create({ url: node.url });
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.update(tabs[0].id, { url: node.url });
+      });
     });
 
     const favicon = document.createElement('img');
