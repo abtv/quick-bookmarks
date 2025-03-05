@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const loadingElement = document.getElementById('loading');
   const bookmarkTreeContainer = document.getElementById('bookmarkTree');
+  const searchInput = document.getElementById('searchInput');
 
   try {
     // Get the entire bookmark tree
@@ -11,11 +12,49 @@ document.addEventListener('DOMContentLoaded', async () => {
       displayBookmarkNode(folder, bookmarkTreeContainer);
     });
 
+    // Add search functionality
+    searchInput.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      filterBookmarks(searchTerm);
+    });
+
     loadingElement.style.display = 'none';
   } catch (error) {
     loadingElement.textContent = 'Error loading bookmarks: ' + error.message;
   }
 });
+
+function filterBookmarks(searchTerm) {
+  const bookmarkItems = document.querySelectorAll('.bookmark-item');
+  const bookmarkFolders = document.querySelectorAll('.bookmark-folder');
+  
+  // Reset visibility of all folders
+  bookmarkFolders.forEach(folder => {
+    folder.classList.add('hidden');
+  });
+
+  // Filter bookmarks
+  let hasVisibleBookmarks = false;
+  bookmarkItems.forEach(item => {
+    const title = item.querySelector('.bookmark-title').textContent.toLowerCase();
+    const url = item.dataset.url ? item.dataset.url.toLowerCase() : '';
+    
+    if (searchTerm === '' || title.includes(searchTerm) || url.includes(searchTerm)) {
+      item.classList.remove('hidden');
+      // Show parent folders of matching bookmarks
+      let parent = item.parentElement;
+      while (parent) {
+        if (parent.classList.contains('bookmark-folder')) {
+          parent.classList.remove('hidden');
+        }
+        parent = parent.parentElement;
+      }
+      hasVisibleBookmarks = true;
+    } else {
+      item.classList.add('hidden');
+    }
+  });
+}
 
 function displayBookmarkNode(node, container) {
   if (node.children) {
@@ -51,6 +90,7 @@ function displayBookmarkNode(node, container) {
     // This is a bookmark
     const bookmarkElement = document.createElement('div');
     bookmarkElement.className = 'bookmark-item';
+    bookmarkElement.dataset.url = node.url; // Store URL for search
     bookmarkElement.addEventListener('click', () => {
       chrome.tabs.create({ url: node.url });
     });
