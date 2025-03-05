@@ -18,6 +18,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       filterBookmarks(searchTerm);
     });
 
+    // Handle Enter key
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const firstVisibleBookmark = document.querySelector('.bookmark-item:not(.hidden)');
+        if (firstVisibleBookmark) {
+          const url = firstVisibleBookmark.dataset.url;
+          chrome.tabs.create({ url });
+        }
+      }
+    });
+
+    // Focus search input
+    searchInput.focus();
+
     loadingElement.style.display = 'none';
   } catch (error) {
     loadingElement.textContent = 'Error loading bookmarks: ' + error.message;
