@@ -121,19 +121,10 @@ function displayBookmarkNode(node, container) {
       });
     });
 
-    const favicon = document.createElement('img');
-    favicon.className = 'bookmark-favicon';
-    favicon.src = `chrome://favicon/size/16/${node.url}`;
-    favicon.alt = '';
-    favicon.onerror = () => {
-      favicon.src = 'chrome://favicon/size/16';
-    };
-
     const title = document.createElement('div');
     title.className = 'bookmark-title';
     title.textContent = node.title || node.url;
 
-    bookmarkElement.appendChild(favicon);
     bookmarkElement.appendChild(title);
     container.appendChild(bookmarkElement);
   }
