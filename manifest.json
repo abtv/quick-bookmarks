@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Quick Bookmarks",
   "version": "1.0",
-  "description": "Quickly search and navigate through your bookmarks",
+  "description": "View all bookmarks from your bookmark folders in a list format",
   "permissions": [
     "bookmarks",
     "tabs"
@@ -12,5 +12,8 @@
   },
   "background": {
     "service_worker": "background.js"
-  }
+  },
+  "author": "",
+  "homepage_url": "https://github.com/abtv/quick-bookmarks",
+  "license": "MIT"
 } 
