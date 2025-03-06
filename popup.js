@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Process and display the bookmark tree
     bookmarkTree[0].children.forEach(folder => {
-      displayBookmarkNode(folder, bookmarkTreeContainer);
+      displayBookmarkNode(folder, '', 0, bookmarkTreeContainer);
     });
 
     // Add search functionality
@@ -108,11 +108,19 @@ function isEligible(text, searchTerms) {
   return searchTerms.every(term => text.includes(term));
 }
 
-function displayBookmarkNode(node, container) {
+function displayBookmarkNode(node, prefix, level, container) {
   if (node.children) {
     // If it's a folder, just process its children
     node.children.forEach(child => {
-      displayBookmarkNode(child, container);
+      let newPrefix = '';
+      if (level > 0) {
+        if (prefix) {
+          newPrefix = prefix + " > " + node.title;
+        } else {
+          newPrefix = node.title;
+        }
+      }
+      displayBookmarkNode(child, newPrefix, level + 1, container);
     });
   } else if (node.url) {
     // This is a bookmark
@@ -127,7 +135,7 @@ function displayBookmarkNode(node, container) {
 
     const title = document.createElement('div');
     title.className = 'bookmark-title';
-    title.textContent = node.title || node.url;
+    title.textContent = (prefix ? prefix + " > " : "")  + (node.title || node.url);
 
     bookmarkElement.appendChild(title);
     container.appendChild(bookmarkElement);
