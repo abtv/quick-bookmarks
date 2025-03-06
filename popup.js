@@ -25,7 +25,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Handle keyboard navigation
     searchInput.addEventListener('keydown', (e) => {
       const visibleBookmarks = Array.from(document.querySelectorAll('.bookmark-item:not(.hidden)'));
-      if (visibleBookmarks.length === 0) return;
+      if (visibleBookmarks.length === 0){
+        const value = searchInput.value;
+        if (e.key === 'Enter' && value) {
+          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.update(tabs[0].id, { url: `https://www.google.com/search?q=${value}` });
+          });
+        }
+        return;
+      }
 
       const currentSelected = document.querySelector('.bookmark-item.selected');
       const currentIndex = currentSelected ? visibleBookmarks.indexOf(currentSelected) : -1;
