@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Add search functionality
     searchInput.addEventListener('input', (e) => {
-      const searchTerm = e.target.value.toLowerCase();
-      filterBookmarks(searchTerm);
+      const searchTerms = e.target.value.toLowerCase().split(' ');
+      filterBookmarks(searchTerms);
       // Select first visible item after filtering
       selectFirstVisibleBookmark();
     });
@@ -88,7 +88,7 @@ function selectBookmark(bookmarkElement) {
   bookmarkElement.scrollIntoView({ block: 'nearest' });
 }
 
-function filterBookmarks(searchTerm) {
+function filterBookmarks(searchTerms) {
   const bookmarkItems = document.querySelectorAll('.bookmark-item');
   
   // Filter bookmarks
@@ -96,12 +96,16 @@ function filterBookmarks(searchTerm) {
     const title = item.querySelector('.bookmark-title').textContent.toLowerCase();
     const url = item.dataset.url ? item.dataset.url.toLowerCase() : '';
     
-    if (searchTerm === '' || title.includes(searchTerm) || url.includes(searchTerm)) {
+    if (searchTerms.length === 0 || isEligible(title, searchTerms) || isEligible(url, searchTerms)) {
       item.classList.remove('hidden');
     } else {
       item.classList.add('hidden');
     }
   });
+}
+
+function isEligible(text, searchTerms) {
+  return searchTerms.every(term => text.includes(term));
 }
 
 function displayBookmarkNode(node, container) {
