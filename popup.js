@@ -1,3 +1,5 @@
+const SEPARATOR = ' => ';
+
 document.addEventListener('DOMContentLoaded', async () => {
   const loadingElement = document.getElementById('loading');
   const bookmarkTreeContainer = document.getElementById('bookmarkTree');
@@ -71,6 +73,7 @@ function selectFirstVisibleBookmark() {
   const firstVisible = document.querySelector('.bookmark-item:not(.hidden)');
   if (firstVisible) {
     selectBookmark(firstVisible);
+    window.scrollTo(0, 0);
   }
 }
 
@@ -115,7 +118,7 @@ function displayBookmarkNode(node, prefix, level, container) {
       let newPrefix = '';
       if (level > 0) {
         if (prefix) {
-          newPrefix = prefix + " > " + node.title;
+          newPrefix = `${prefix}${SEPARATOR}${node.title}`;
         } else {
           newPrefix = node.title;
         }
@@ -135,7 +138,7 @@ function displayBookmarkNode(node, prefix, level, container) {
 
     const title = document.createElement('div');
     title.className = 'bookmark-title';
-    title.textContent = (prefix ? prefix + " > " : "")  + (node.title || node.url);
+    title.textContent = (prefix ? `${prefix}${SEPARATOR}` : "")  + (node.title || node.url);
 
     bookmarkElement.appendChild(title);
     container.appendChild(bookmarkElement);
