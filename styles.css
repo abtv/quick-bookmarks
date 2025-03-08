@@ -91,7 +91,7 @@ body {
 .bookmark-item {
     display: flex;
     align-items: center;
-    padding: 8px 16px;
+    padding: 4px 8px;
     cursor: pointer;
     text-decoration: none;
     border-radius: 8px;
@@ -102,7 +102,7 @@ body {
 }
 
 .bookmark-item.selected {
-    background: #f8f9fa;
+    background: #e8e9ea;
     position: relative;
 }
 
@@ -160,8 +160,4 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #bdc1c6;
-}
-
-#bookmarkTree {
-    padding: 12px 16px;
 }

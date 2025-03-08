@@ -64,7 +64,6 @@ document.addEventListener(EVENT_TYPE.DOMContentLoaded, async () => {
           selectBookmark(visibleBookmarks[currentIndex + 1]);
         } else {
           selectBookmark(visibleBookmarks[0]);
-          scrollToTop();
         }
         break;
 
@@ -72,9 +71,6 @@ document.addEventListener(EVENT_TYPE.DOMContentLoaded, async () => {
         e.preventDefault();
         if (currentIndex > 0) {
           selectBookmark(visibleBookmarks[currentIndex - 1]);
-          if (currentIndex === 1) {
-            scrollToTop();
-          }
         } else {
           selectBookmark(visibleBookmarks[visibleBookmarks.length - 1]);
         }
@@ -113,7 +109,7 @@ function selectBookmark(bookmarkElement) {
 
   // NOTE Add selection to new bookmark
   bookmarkElement.classList.add("selected");
-  bookmarkElement.scrollIntoView({ block: "nearest" });
+  bookmarkElement.scrollIntoView({ block: "center" });
 }
 
 function filterBookmarks(searchText) {
