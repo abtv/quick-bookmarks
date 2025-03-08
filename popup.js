@@ -9,7 +9,6 @@ const EVENT_TYPE = Object.freeze({
   keydown: "keydown",
   click: "click",
 });
-const SEPARATOR = " => ";
 
 document.addEventListener(EVENT_TYPE.DOMContentLoaded, async () => {
   const loadingElement = document.getElementById("loading");
@@ -17,12 +16,10 @@ document.addEventListener(EVENT_TYPE.DOMContentLoaded, async () => {
   const searchInput = document.getElementById("searchInput");
 
   try {
-    // Get the entire bookmark tree
-    const bookmarkTree = await chrome.bookmarks.getTree();
+    const bookmarks = await getBookmarks();
 
-    // Process and display the bookmark tree
-    for (child of bookmarkTree[0].children) {
-      displayBookmarkNode(child, "", 0, bookmarkTreeContainer);
+    for (bookmark of bookmarks) {
+      displayBookmark(bookmark, bookmarkTreeContainer);
     }
 
     // Add search functionality
@@ -139,41 +136,62 @@ function filterBookmarks(searchTerms) {
   }
 }
 
+// Data utils
+
 function isEligible(text, searchTerms) {
   return searchTerms.every((term) => text.includes(term));
 }
 
-function displayBookmarkNode(node, prefix, level, container) {
-  if (node.children) {
-    // If it's a folder, just process its children
-    node.children.forEach((child) => {
-      let newPrefix = "";
-      if (level > 0) {
-        if (prefix) {
-          newPrefix = `${prefix}${SEPARATOR}${node.title}`;
-        } else {
-          newPrefix = node.title;
-        }
-      }
-      displayBookmarkNode(child, newPrefix, level + 1, container);
-    });
-  } else if (node.url) {
-    // This is a bookmark
-    const bookmarkElement = document.createElement("div");
-    bookmarkElement.className = "bookmark-item";
-    bookmarkElement.dataset.url = node.url; // Store URL for search
-    bookmarkElement.addEventListener(EVENT_TYPE.click, () => {
-      openURL(node.url);
-    });
+async function getBookmarks() {
+  const bookmarks = [];
 
-    const title = document.createElement("div");
-    title.className = "bookmark-title";
-    title.textContent =
-      (prefix ? `${prefix}${SEPARATOR}` : "") + (node.title || node.url);
-
-    bookmarkElement.appendChild(title);
-    container.appendChild(bookmarkElement);
+  const bookmarkTree = await chrome.bookmarks.getTree();
+  for (child of bookmarkTree[0].children) {
+    processNode(child, "", 0);
   }
+
+  function processNode(node, prefix, level) {
+    const SEPARATOR = " => ";
+    if (node.children) {
+      // NOTE this is a folder
+      for (child of node.children) {
+        let newPrefix = "";
+        if (level > 0) {
+          if (prefix) {
+            newPrefix = `${prefix}${SEPARATOR}${node.title}`;
+          } else {
+            newPrefix = node.title;
+          }
+        }
+        processNode(child, newPrefix, level + 1);
+      }
+    } else if (node.url) {
+      // NOTE this is a bookmark
+      bookmarks.push({
+        title:
+          (prefix ? `${prefix}${SEPARATOR}` : "") + (node.title || node.url),
+        url: node.url,
+      });
+    }
+  }
+
+  return bookmarks;
+}
+
+// UI utils
+
+function displayBookmark({ title, url }, container) {
+  const bookmarkEl = document.createElement("div");
+  bookmarkEl.className = "bookmark-item";
+  bookmarkEl.dataset.url = url; // Store URL for search
+  bookmarkEl.addEventListener(EVENT_TYPE.click, () => openURL(url));
+
+  const titleEl = document.createElement("div");
+  titleEl.className = "bookmark-title";
+  titleEl.textContent = title;
+
+  bookmarkEl.appendChild(titleEl);
+  container.appendChild(bookmarkEl);
 }
 
 function openURL(url) {
