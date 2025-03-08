@@ -14,81 +14,84 @@ document.addEventListener(EVENT_TYPE.DOMContentLoaded, async () => {
   const loadingElement = document.getElementById("loading");
   const bookmarkTreeContainer = document.getElementById("bookmarkTree");
   const searchInput = document.getElementById("searchInput");
+  searchInput.focus();
 
   try {
     const bookmarks = await getBookmarks();
-
-    for (bookmark of bookmarks) {
-      displayBookmark(bookmark, bookmarkTreeContainer);
+    for (const bookmark of bookmarks) {
+      addItem(bookmark, "bookmark-item", bookmarkTreeContainer);
     }
 
-    // Add search functionality
-    searchInput.addEventListener(EVENT_TYPE.input, (e) => {
-      const searchTerms = e.target.value.toLowerCase().split(" ");
-      filterBookmarks(searchTerms);
-      // Select first visible item after filtering
-      selectFirstVisibleBookmark();
-    });
-
-    // Handle keyboard navigation
-    searchInput.addEventListener(EVENT_TYPE.keydown, (e) => {
-      const visibleBookmarks = Array.from(
-        document.querySelectorAll(".bookmark-item:not(.hidden)"),
-      );
-      if (visibleBookmarks.length === 0) {
-        const value = searchInput.value;
-        if (e.key === KEYS.Enter && value) {
-          openURL(`https://www.google.com/search?q=${value}`);
-        }
-        return;
-      }
-
-      const currentSelected = document.querySelector(".bookmark-item.selected");
-      const currentIndex = currentSelected
-        ? visibleBookmarks.indexOf(currentSelected)
-        : -1;
-
-      switch (e.key) {
-        case KEYS.ArrowDown:
-          e.preventDefault();
-          if (currentIndex < visibleBookmarks.length - 1) {
-            selectBookmark(visibleBookmarks[currentIndex + 1]);
-          }
-          break;
-
-        case KEYS.ArrowUp:
-          e.preventDefault();
-          if (currentIndex > 0) {
-            selectBookmark(visibleBookmarks[currentIndex - 1]);
-          } else if (currentIndex === 0) {
-            scrollToTop();
-          }
-          break;
-
-        case KEYS.Enter:
-          e.preventDefault();
-          const selectedBookmark = document.querySelector(
-            ".bookmark-item.selected",
-          );
-          if (selectedBookmark) {
-            const url = selectedBookmark.dataset.url;
-            // Replace current tab with the selected bookmark
-            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-              chrome.tabs.update(tabs[0].id, { url });
-            });
-          }
-          break;
-      }
-    });
-
-    // Focus search input and select first bookmark
-    searchInput.focus();
     selectFirstVisibleBookmark();
 
     loadingElement.style.display = "none";
   } catch (error) {
     loadingElement.textContent = "Error loading bookmarks: " + error.message;
   }
+
+  searchInput.addEventListener(EVENT_TYPE.input, (e) => {
+    const text = e.target.value;
+    filterBookmarks(text);
+    selectFirstVisibleBookmark();
+  });
+
+  searchInput.addEventListener(EVENT_TYPE.keydown, (e) => {
+    const visibleBookmarks = Array.from(
+      document.querySelectorAll(".bookmark-item:not(.hidden)"),
+    );
+    // TODO add a search item
+    if (visibleBookmarks.length === 0) {
+      const value = searchInput.value;
+      if (e.key === KEYS.Enter && value) {
+        openURL(`https://www.google.com/search?q=${value}`);
+      }
+      return;
+    }
+
+    const currentSelected = document.querySelector(".bookmark-item.selected");
+    const currentIndex = currentSelected
+      ? visibleBookmarks.indexOf(currentSelected)
+      : -1;
+
+    if (currentIndex < 0) {
+      return;
+    }
+
+    switch (e.key) {
+      case KEYS.ArrowDown:
+        e.preventDefault();
+        if (currentIndex < visibleBookmarks.length - 1) {
+          selectBookmark(visibleBookmarks[currentIndex + 1]);
+        } else {
+          selectBookmark(visibleBookmarks[0]);
+          scrollToTop();
+        }
+        break;
+
+      case KEYS.ArrowUp:
+        e.preventDefault();
+        if (currentIndex > 0) {
+          selectBookmark(visibleBookmarks[currentIndex - 1]);
+          if (currentIndex === 1) {
+            scrollToTop();
+          }
+        } else {
+          selectBookmark(visibleBookmarks[visibleBookmarks.length - 1]);
+        }
+
+        break;
+
+      case KEYS.Enter:
+        e.preventDefault();
+        const selectedBookmark = document.querySelector(
+          ".bookmark-item.selected",
+        );
+        if (selectedBookmark) {
+          openURL(selectedBookmark.dataset.url);
+        }
+        break;
+    }
+  });
 });
 
 function selectFirstVisibleBookmark() {
@@ -102,27 +105,24 @@ function selectFirstVisibleBookmark() {
 }
 
 function selectBookmark(bookmarkElement) {
-  // Remove selection from previously selected bookmark
+  // NOTE Remove selection from previously selected bookmark
   const previouslySelected = document.querySelector(".bookmark-item.selected");
   if (previouslySelected) {
     previouslySelected.classList.remove("selected");
   }
 
-  // Add selection to new bookmark
+  // NOTE Add selection to new bookmark
   bookmarkElement.classList.add("selected");
-
-  // Ensure the selected item is visible in the viewport
   bookmarkElement.scrollIntoView({ block: "nearest" });
 }
 
-function filterBookmarks(searchTerms) {
-  const bookmarkItems = document.querySelectorAll(".bookmark-item");
+function filterBookmarks(searchText) {
+  const searchTerms = searchText.toLowerCase().split(" ");
 
-  for (item of bookmarkItems) {
-    const title = item
-      .querySelector(".bookmark-title")
-      .textContent.toLowerCase();
-    const url = item.dataset.url ? item.dataset.url.toLowerCase() : "";
+  const bookmarkItems = document.querySelectorAll(".bookmark-item");
+  for (const item of bookmarkItems) {
+    const title = item.dataset.titleLowerCase || "";
+    const url = item.dataset.urlLowerCase || "";
 
     if (
       searchTerms.length === 0 ||
@@ -136,8 +136,9 @@ function filterBookmarks(searchTerms) {
   }
 }
 
-// Data utils
-
+/*
+Data utils
+*/
 function isEligible(text, searchTerms) {
   return searchTerms.every((term) => text.includes(term));
 }
@@ -146,7 +147,7 @@ async function getBookmarks() {
   const bookmarks = [];
 
   const bookmarkTree = await chrome.bookmarks.getTree();
-  for (child of bookmarkTree[0].children) {
+  for (const child of bookmarkTree[0].children) {
     processNode(child, "", 0);
   }
 
@@ -154,7 +155,7 @@ async function getBookmarks() {
     const SEPARATOR = " => ";
     if (node.children) {
       // NOTE this is a folder
-      for (child of node.children) {
+      for (const child of node.children) {
         let newPrefix = "";
         if (level > 0) {
           if (prefix) {
@@ -167,9 +168,10 @@ async function getBookmarks() {
       }
     } else if (node.url) {
       // NOTE this is a bookmark
+      const title =
+        (prefix ? `${prefix}${SEPARATOR}` : "") + (node.title || node.url);
       bookmarks.push({
-        title:
-          (prefix ? `${prefix}${SEPARATOR}` : "") + (node.title || node.url),
+        title: title,
         url: node.url,
       });
     }
@@ -178,17 +180,20 @@ async function getBookmarks() {
   return bookmarks;
 }
 
-// UI utils
-
-function displayBookmark({ title, url }, container) {
-  const bookmarkEl = document.createElement("div");
-  bookmarkEl.className = "bookmark-item";
-  bookmarkEl.dataset.url = url; // Store URL for search
-  bookmarkEl.addEventListener(EVENT_TYPE.click, () => openURL(url));
-
+/*
+UI utils
+*/
+function addItem({ title, url }, className, container) {
   const titleEl = document.createElement("div");
   titleEl.className = "bookmark-title";
   titleEl.textContent = title;
+
+  const bookmarkEl = document.createElement("div");
+  bookmarkEl.className = className;
+  bookmarkEl.dataset.url = url;
+  bookmarkEl.dataset.urlLowerCase = url.toLowerCase();
+  bookmarkEl.dataset.titleLowerCase = title.toLowerCase();
+  bookmarkEl.addEventListener(EVENT_TYPE.click, () => openURL(url));
 
   bookmarkEl.appendChild(titleEl);
   container.appendChild(bookmarkEl);
