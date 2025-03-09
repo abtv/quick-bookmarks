@@ -39,14 +39,6 @@ document.addEventListener(EVENT_TYPE.DOMContentLoaded, async () => {
     const visibleBookmarks = Array.from(
       document.querySelectorAll(".bookmark-item:not(.hidden)"),
     );
-    // TODO add a search item
-    if (visibleBookmarks.length === 0) {
-      const value = searchInput.value;
-      if (e.key === KEYS.Enter && value) {
-        openURL(`https://www.google.com/search?q=${value}`);
-      }
-      return;
-    }
 
     const currentSelected = document.querySelector(".bookmark-item.selected");
     const currentIndex = currentSelected
