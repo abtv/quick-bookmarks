@@ -71,11 +71,12 @@ document.addEventListener(EVENT_TYPE.DOMContentLoaded, async () => {
 
       case KEYS.Enter:
         e.preventDefault();
+        const openInNewTab = e.ctrlKey || e.metaKey || e.shiftKey;
         const selectedBookmark = document.querySelector(
           ".bookmark-item.selected",
         );
         if (selectedBookmark) {
-          openURL(selectedBookmark.dataset.url);
+          openURL(selectedBookmark.dataset.url, openInNewTab);
         }
         break;
     }
@@ -180,14 +181,18 @@ function addItem({ title, url }, className, container) {
   bookmarkEl.dataset.url = url;
   bookmarkEl.dataset.urlLowerCase = url.toLowerCase();
   bookmarkEl.dataset.titleLowerCase = title.toLowerCase();
-  bookmarkEl.addEventListener(EVENT_TYPE.click, () => openURL(url));
+  bookmarkEl.addEventListener(EVENT_TYPE.click, () => openURL(url, false));
 
   bookmarkEl.appendChild(titleEl);
   container.appendChild(bookmarkEl);
 }
 
-function openURL(url) {
+function openURL(url, openInNewTab) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.tabs.update(tabs[0].id, { url });
+    if (openInNewTab) {
+      chrome.tabs.create({ url, active: false });
+    } else {
+      chrome.tabs.update(tabs[0].id, { url });
+    }
   });
 }
