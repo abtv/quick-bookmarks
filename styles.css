@@ -49,7 +49,6 @@ body {
     border-color: rgba(223, 225, 229, 0);
 }
 
-.bookmark-folder.hidden,
 .bookmark-item.hidden {
     display: none;
 }
@@ -128,20 +127,6 @@ body {
 
 .fullscreen .bookmark-title {
     font-size: 16px;
-}
-
-.folder-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.folder-icon {
-    font-size: 16px;
-}
-
-.fullscreen .folder-icon {
-    font-size: 20px;
 }
 
 /* Scrollbar styling */
