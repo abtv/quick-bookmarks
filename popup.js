@@ -89,7 +89,6 @@ function selectFirstVisibleBookmark() {
   }
 
   selectBookmark(firstVisible);
-  scrollToTop();
 }
 
 function selectBookmark(bookmarkElement) {
@@ -191,8 +190,4 @@ function openURL(url) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     chrome.tabs.update(tabs[0].id, { url });
   });
-}
-
-function scrollToTop() {
-  window.scrollTo(0, 0);
 }
