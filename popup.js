@@ -9,6 +9,7 @@ const EVENT_TYPE = Object.freeze({
   keydown: "keydown",
   click: "click",
 });
+const SEPARATOR = " => ";
 
 document.addEventListener(EVENT_TYPE.DOMContentLoaded, async () => {
   const loadingElement = document.getElementById("loading");
@@ -18,8 +19,15 @@ document.addEventListener(EVENT_TYPE.DOMContentLoaded, async () => {
 
   try {
     const bookmarks = await getBookmarks();
+    const ignoredURLs = new Set(bookmarks.map(({ url }) => url));
+    const urls = await getFrequentlyUsedURLs(ignoredURLs);
+
     for (const bookmark of bookmarks) {
       addItem(bookmark, "bookmark-item", bookmarkTreeContainer);
+    }
+
+    for (const url of urls) {
+      addItem(url, "bookmark-item", bookmarkTreeContainer);
     }
 
     selectFirstVisibleBookmark();
@@ -140,7 +148,6 @@ async function getBookmarks() {
   }
 
   function processNode(node, prefix, level) {
-    const SEPARATOR = " => ";
     if (node.children) {
       // NOTE this is a folder
       for (const child of node.children) {
@@ -166,6 +173,46 @@ async function getBookmarks() {
   }
 
   return bookmarks;
+}
+
+function getFrequentlyUsedURLs(ignoredURLs) {
+  const SEARCH_EVERYTHING = "";
+  const MAX_HISTORY_RECORDS = 10_000;
+  const NOW = 0;
+  return new Promise((resolve, reject) => {
+    chrome.history.search(
+      {
+        text: SEARCH_EVERYTHING,
+        maxResults: MAX_HISTORY_RECORDS,
+        startTime: NOW,
+      },
+      (results) => resolve(getPopularLinks(results)),
+    );
+  });
+
+  function getPopularLinks(results) {
+    results.sort((a, b) => b.visitCount - a.visitCount);
+
+    const MAX_POPULAR_LINKS = 50;
+    const popularLinks = [];
+
+    for (const result of results) {
+      const { url, title } = result;
+
+      if (popularLinks.length >= MAX_POPULAR_LINKS) {
+        break;
+      }
+
+      if (!ignoredURLs.has(url)) {
+        popularLinks.push({
+          title: `History${SEPARATOR}${title}`,
+          url,
+        });
+      }
+    }
+
+    return popularLinks;
+  }
 }
 
 /*
